@@ -238,6 +238,9 @@ namespace MWInput
 
         void loadKeyDefaults(bool force = false);
         void loadControllerDefaults(bool force = false);
+        
+        /// block attacks manually
+        void blockAttacksManually();
 
         int mFakeDeviceID; //As we only support one controller at a time, use a fake deviceID so we don't lose bindings when switching controllers
 
@@ -308,6 +311,9 @@ namespace MWInput
             A_LookLeftRight,
             A_MoveForwardBackward,
             A_MoveLeftRight,
+            
+            
+            A_BlockAttack,       // block attacks manually
 
             A_Last            // Marker for the last item
         };

@@ -22,7 +22,7 @@ namespace MWMechanics
           mKnockdown(false), mKnockdownOneFrame(false), mKnockdownOverOneFrame(false),
           mHitRecovery(false), mBlock(false), mMovementFlags(0),
           mFallHeight(0), mRecalcMagicka(false), mLastRestock(0,0), mGoldPool(0), mActorId(-1),
-          mDeathAnimation(0), mLevel (0)
+          mDeathAnimation(0), mLevel (0), mLastAttackTime(0), mBlockManually(true)
     {
         for (int i=0; i<4; ++i)
             mAiSettings[i] = 0;
@@ -507,7 +507,7 @@ namespace MWMechanics
 
         state.mSummonedCreatureMap = mSummonedCreatures;
         state.mSummonGraveyard = mSummonGraveyard;
-
+        
         state.mHasAiSettings = true;
         for (int i=0; i<4; ++i)
             mAiSettings[i].writeState (state.mAiSettings[i]);
@@ -627,4 +627,28 @@ namespace MWMechanics
     {
         return mSummonGraveyard;
     }
+    
+    
+    
+    unsigned int CreatureStats::getLastAttackTimer()
+    {
+        return mLastAttackTime;
+    }
+    
+    void CreatureStats::setLastAttackTimer(unsigned int lastAttackTime)
+    {
+        mLastAttackTime = lastAttackTime;
+    }
+    
+    bool CreatureStats::getBlockManually()
+    {
+        return mBlockManually;
+    }
+    
+    void CreatureStats::setBlockManually(bool blockManually)
+    {
+        mBlockManually = blockManually;
+    }
+
+
 }

@@ -46,6 +46,12 @@ namespace MWMechanics
         bool mHitRecovery;
         bool mBlock;
         unsigned int mMovementFlags;
+        
+        
+        /// frames since last attack
+        unsigned int mLastAttackTime;
+        /// manually block an attack
+        bool mBlockManually;
 
         float mFallHeight;
 
@@ -265,6 +271,17 @@ namespace MWMechanics
         bool matchesActorId (int id) const;
         ///< Check if \a id matches the actor ID of *this (if the actor does not have an ID
         /// assigned this function will return false).
+        
+        /// get frames left until fatigue restores again
+        unsigned int getLastAttackTimer();
+        /// set frames until fatigue restores again
+        void setLastAttackTimer(unsigned int lastAttackTime);
+        
+        /// get indicator for blocking manually
+        bool getBlockManually();
+        
+        /// set the indicator for blocking manually
+        void setBlockManually(bool blockManually);
 
         static void cleanup();
     };

@@ -40,6 +40,11 @@ void applyFatigueLoss(const MWWorld::Ptr& attacker, const MWWorld::Ptr& weapon, 
 /// e.g. If attacker is a fish, is victim in water? Or, if attacker can't swim, is victim on land?
 bool isEnvironmentCompatible(const MWWorld::Ptr& attacker, const MWWorld::Ptr& victim);
 
+/// checks whether the attacker exhausted himself during attacking. if so, he will fall down,
+/// or can't attack for a second. 
+/// The Fatigue will restore after that.
+void checkExaustion(const MWWorld::Ptr& attacker);
+
 }
 
 #endif

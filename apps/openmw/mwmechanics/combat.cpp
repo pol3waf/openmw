@@ -109,16 +109,52 @@ namespace MWMechanics
         attackerTerm *= attackerStats.getFatigueTerm();
 
         int x = int(blockerTerm - attackerTerm);
-        int iBlockMaxChance = gmst.find("iBlockMaxChance")->getInt();
-        int iBlockMinChance = gmst.find("iBlockMinChance")->getInt();
-        x = std::min(iBlockMaxChance, std::max(iBlockMinChance, x));
-
-        if (Misc::Rng::roll0to99() < x)
+//        int iBlockMaxChance = gmst.find("iBlockMaxChance")->getInt();
+//        int iBlockMinChance = gmst.find("iBlockMinChance")->getInt();
+//        x = std::min(iBlockMaxChance, std::max(iBlockMinChance, x));
+//
+//        if (Misc::Rng::roll0to99() < x)
+//        {
+//            // Reduce shield durability by incoming damage
+//            int shieldhealth = shield->getClass().getItemHealth(*shield);
+//
+//            shieldhealth -= std::min(shieldhealth, int(damage));
+//            shield->getCellRef().setCharge(shieldhealth);
+//            if (shieldhealth == 0)
+//                inv.unequipItem(*shield, blocker);
+//
+//            // Reduce blocker fatigue
+//            const float fFatigueBlockBase = gmst.find("fFatigueBlockBase")->getFloat();
+//            const float fFatigueBlockMult = gmst.find("fFatigueBlockMult")->getFloat();
+//            const float fWeaponFatigueBlockMult = gmst.find("fWeaponFatigueBlockMult")->getFloat();
+//            MWMechanics::DynamicStat<float> fatigue = blockerStats.getFatigue();
+//            float normalizedEncumbrance = blocker.getClass().getNormalizedEncumbrance(blocker);
+//            normalizedEncumbrance = std::min(1.f, normalizedEncumbrance);
+//            float fatigueLoss = fFatigueBlockBase + normalizedEncumbrance * fFatigueBlockMult;
+//            if (!weapon.isEmpty())
+//                fatigueLoss += weapon.getClass().getWeight(weapon) * attackStrength * fWeaponFatigueBlockMult;
+//            fatigue.setCurrent(fatigue.getCurrent() - fatigueLoss);
+//            blockerStats.setFatigue(fatigue);
+//
+//            blockerStats.setBlock(true);
+//
+//            if (blocker == getPlayer())
+//                blocker.getClass().skillUsageSucceeded(blocker, ESM::Skill::Block, 0);
+//
+//            return true;
+//        }
+        
+        
+        
+        
+        
+        // manual blocking
+        if (blocker.getClass().getCreatureStats(blocker).getBlockManually())
         {
             // Reduce shield durability by incoming damage
             int shieldhealth = shield->getClass().getItemHealth(*shield);
 
-            shieldhealth -= std::min(shieldhealth, int(damage));
+            shieldhealth -= std::min(shieldhealth, int(10 * damage /blockerStats.getAttribute(ESM::Skill::Block).getBase()));
             shield->getCellRef().setCharge(shieldhealth);
             if (shieldhealth == 0)
                 inv.unequipItem(*shield, blocker);
@@ -132,7 +168,7 @@ namespace MWMechanics
             normalizedEncumbrance = std::min(1.f, normalizedEncumbrance);
             float fatigueLoss = fFatigueBlockBase + normalizedEncumbrance * fFatigueBlockMult;
             if (!weapon.isEmpty())
-                fatigueLoss += weapon.getClass().getWeight(weapon) * attackStrength * fWeaponFatigueBlockMult;
+                fatigueLoss += (weapon.getClass().getWeight(weapon) * attackStrength * fWeaponFatigueBlockMult) - x;
             fatigue.setCurrent(fatigue.getCurrent() - fatigueLoss);
             blockerStats.setFatigue(fatigue);
 
@@ -140,9 +176,17 @@ namespace MWMechanics
 
             if (blocker == getPlayer())
                 blocker.getClass().skillUsageSucceeded(blocker, ESM::Skill::Block, 0);
+            
+            blocker.getClass().getCreatureStats(blocker).setBlockManually(false);
 
             return true;
         }
+        
+        
+        
+        
+        
+        
         return false;
     }
 
@@ -399,8 +443,13 @@ namespace MWMechanics
             sndMgr->playSound3D(victim, "Hand To Hand Hit", 1.0f, 1.0f);
     }
 
+    
+    
+    /// change this a bit ... the fatigue loss should be greater
     void applyFatigueLoss(const MWWorld::Ptr &attacker, const MWWorld::Ptr &weapon, float attackStrength)
     {
+        const float looseFatigueMultiplier = 5.0f;
+        const float moreLooseFatigueMultiplier = 20.0f;
         // somewhat of a guess, but using the weapon weight makes sense
         const MWWorld::Store<ESM::GameSetting>& store = MWBase::Environment::get().getWorld()->getStore().get<ESM::GameSetting>();
         const float fFatigueAttackBase = store.find("fFatigueAttackBase")->getFloat();
@@ -409,9 +458,9 @@ namespace MWMechanics
         CreatureStats& stats = attacker.getClass().getCreatureStats(attacker);
         MWMechanics::DynamicStat<float> fatigue = stats.getFatigue();
         const float normalizedEncumbrance = attacker.getClass().getNormalizedEncumbrance(attacker);
-        float fatigueLoss = fFatigueAttackBase + normalizedEncumbrance * fFatigueAttackMult;
+        float fatigueLoss = (fFatigueAttackBase + normalizedEncumbrance * fFatigueAttackMult) * looseFatigueMultiplier;
         if (!weapon.isEmpty())
-            fatigueLoss += weapon.getClass().getWeight(weapon) * attackStrength * fWeaponFatigueMult;
+            fatigueLoss += weapon.getClass().getWeight(weapon) * attackStrength * fWeaponFatigueMult * moreLooseFatigueMultiplier;
         fatigue.setCurrent(fatigue.getCurrent() - fatigueLoss);
         stats.setFatigue(fatigue);
     }
@@ -434,5 +483,17 @@ namespace MWMechanics
         }
 
         return true;
+    }
+    
+    
+    
+    void checkExaustion(const MWWorld::Ptr& attacker)
+    {
+        CreatureStats& attackerStats = attacker.getClass().getCreatureStats(attacker);
+        if (attackerStats.getFatigue().getCurrent() <= 0.0f)
+        {
+            attackerStats.setKnockedDown(true);
+            attackerStats.getKnockedDown();
+        }
     }
 }

@@ -470,8 +470,21 @@ namespace MWMechanics
         const MWWorld::Store<ESM::GameSetting>& settings = MWBase::Environment::get().getWorld()->getStore().get<ESM::GameSetting>();
         static const float fFatigueReturnBase = settings.find("fFatigueReturnBase")->getFloat ();
         static const float fFatigueReturnMult = settings.find("fFatigueReturnMult")->getFloat ();
-
-        float x = fFatigueReturnBase + fFatigueReturnMult * endurance;
+        
+        // additional fatigueGainMultiplier for faster restoration
+        float fatigueGainMultiplier = 10.0f;
+        // get time since last attack, so that the restoration kicks in with a delay
+        unsigned int lastAttackTimer = stats.getLastAttackTimer();
+        
+        float x=0.0f;
+        if (lastAttackTimer <= 0)
+        {
+            x = (fFatigueReturnBase + fFatigueReturnMult * endurance) * fatigueGainMultiplier;
+        }
+        else if(lastAttackTimer >= 1)
+        {
+                stats.setLastAttackTimer(lastAttackTimer - 1);
+        }
 
         DynamicStat<float> fatigue = stats.getFatigue();
         fatigue.setCurrent (fatigue.getCurrent() + duration * x);

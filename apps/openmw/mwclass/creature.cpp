@@ -233,14 +233,14 @@ namespace MWClass
 
         osg::Vec3f hitPosition (result.second);
 
-        float hitchance = MWMechanics::getHitChance(ptr, victim, ref->mBase->mData.mCombat);
+        float hitchance = MWMechanics::getHitChance(ptr, victim, ref->mBase->mData.mCombat) / 100.0f;
 
-        if(Misc::Rng::roll0to99() >= hitchance)
-        {
-            victim.getClass().onHit(victim, 0.0f, false, MWWorld::Ptr(), ptr, false);
-            MWMechanics::reduceWeaponCondition(0.f, false, weapon, ptr);
-            return;
-        }
+//        if(Misc::Rng::roll0to99() >= hitchance)
+//        {
+//            victim.getClass().onHit(victim, 0.0f, false, MWWorld::Ptr(), ptr, false);
+//            MWMechanics::reduceWeaponCondition(0.f, false, weapon, ptr);
+//            return;
+//        }
 
         int min,max;
         switch (type)
@@ -261,6 +261,7 @@ namespace MWClass
         }
 
         float damage = min + (max - min) * attackStrength;
+        float damageMultiplier = 2.0f;
         bool healthdmg = true;
         if (!weapon.isEmpty())
         {
@@ -273,7 +274,7 @@ namespace MWClass
                 attack = weapon.get<ESM::Weapon>()->mBase->mData.mThrust;
             if(attack)
             {
-                damage = attack[0] + ((attack[1]-attack[0])*attackStrength);
+                damage = attack[0] + ((attack[1]-attack[0])*attackStrength * hitchance * damageMultiplier);
                 MWMechanics::adjustWeaponDamage(damage, weapon, ptr);
                 MWMechanics::reduceWeaponCondition(damage, true, weapon, ptr);
             }

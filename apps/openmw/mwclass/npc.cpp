@@ -457,6 +457,9 @@ namespace MWClass
     }
 
 
+    
+    
+    /// this is what I probably want to change
     void Npc::hit(const MWWorld::Ptr& ptr, float attackStrength, int type) const
     {
         MWBase::World *world = MWBase::Environment::get().getWorld();
@@ -478,6 +481,19 @@ namespace MWClass
                                store.find("fHandToHandReach")->getFloat());
 
         // TODO: Use second to work out the hit angle
+        
+        
+        
+        
+        // if exausted - no more attacks are possible / fall down
+        MWMechanics::checkExaustion(ptr);
+        
+        // set the lastAttackTimer, so that the fatigue will not restore immediately.
+        ptr.getClass().getCreatureStats(ptr).setLastAttackTimer(90);
+        
+        
+        
+        /// get the target of the hit by providing the attacker and the weapon-reach
         std::pair<MWWorld::Ptr, osg::Vec3f> result = world->getHitContact(ptr, dist);
         MWWorld::Ptr victim = result.first;
         osg::Vec3f hitPosition (result.second);
@@ -491,23 +507,37 @@ namespace MWClass
         if(otherstats.isDead()) // Can't hit dead actors
             return;
 
+        
+        
+        /// yes - this method is used for the player as well :D
         if(ptr == MWMechanics::getPlayer())
             MWBase::Environment::get().getWindowManager()->setEnemy(victim);
 
+        
+        
         int weapskill = ESM::Skill::HandToHand;
         if(!weapon.isEmpty())
             weapskill = weapon.getClass().getEquipmentSkill(weapon);
 
-        float hitchance = MWMechanics::getHitChance(ptr, victim, ptr.getClass().getSkill(ptr, weapskill));
+        
+        
+        /// the hitchance is a number between 0 and 99? yes
+        float hitchance = MWMechanics::getHitChance(ptr, victim, ptr.getClass().getSkill(ptr, weapskill)) / 100;
 
-        if (Misc::Rng::roll0to99() >= hitchance)
-        {
-            othercls.onHit(victim, 0.0f, false, weapon, ptr, false);
-            MWMechanics::reduceWeaponCondition(0.f, false, weapon, ptr);
-            return;
-        }
+        /// notify victim of unsuccessful attempt on his/her miserable life and return
+//        if (Misc::Rng::roll0to99() >= hitchance)
+//        {
+//            othercls.onHit(victim, 0.0f, false, weapon, ptr, false);
+//            MWMechanics::reduceWeaponCondition(0.f, false, weapon, ptr);
+//            return;
+//        }
 
+        
+        
+        
+        /// the hit was successfull: therefore do stuff
         bool healthdmg;
+        float damageMultiplier = 2.0f;
         float damage = 0.0f;
         if(!weapon.isEmpty())
         {
@@ -520,7 +550,7 @@ namespace MWClass
                 attack = weapon.get<ESM::Weapon>()->mBase->mData.mThrust;
             if(attack)
             {
-                damage  = attack[0] + ((attack[1]-attack[0])*attackStrength);
+                damage  = attack[0] + ((attack[1]-attack[0])*attackStrength*hitchance*damageMultiplier);
             }
             MWMechanics::adjustWeaponDamage(damage, weapon, ptr);
             MWMechanics::reduceWeaponCondition(damage, true, weapon, ptr);
@@ -530,6 +560,10 @@ namespace MWClass
         {
             MWMechanics::getHandToHandDamage(ptr, victim, damage, healthdmg, attackStrength);
         }
+        
+        
+        
+        /// here comes the player
         if(ptr == MWMechanics::getPlayer())
         {
             skillUsageSucceeded(ptr, weapskill, 0);
@@ -572,10 +606,19 @@ namespace MWClass
             MWBase::Environment::get().getWorld()->spawnBloodEffect(victim, hitPosition);
 
         MWMechanics::diseaseContact(victim, ptr);
-
+        
         othercls.onHit(victim, damage, healthdmg, weapon, ptr, true);
     }
 
+    
+    
+    
+    
+    
+    
+    
+    
+    
     void Npc::onHit(const MWWorld::Ptr &ptr, float damage, bool ishealth, const MWWorld::Ptr &object, const MWWorld::Ptr &attacker, bool successful) const
     {
         MWBase::SoundManager *sndMgr = MWBase::Environment::get().getSoundManager();
