@@ -1,5 +1,9 @@
+Comment
+=======
+
 This is just me toying around with the OpenMW project for fun and a bit of leaning. 
-Nothing I'm doing with this branch has meaning to anything the amazing openMW-team is up to.
+Nothing I'm doing with this branch is relevant to the project of OpenMW and its amazing development team.
+Furthermore this branch is severely outdated, so if you are interested in the OpenMW project, then check out the real Project.
 
 OpenMW
 ======
