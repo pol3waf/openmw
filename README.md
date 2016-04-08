@@ -1,3 +1,6 @@
+This is just me toying around with the OpenMW project for fun and a bit of leaning. 
+Nothing I'm doing with this branch has meaning to anything the amazing openMW-team is up to.
+
 OpenMW
 ======
 
